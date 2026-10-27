@@ -840,6 +840,160 @@ export function createMinimalUI(container, state, onChange) {
   arControlsWrap.appendChild(arBtnRow);
   arSection.appendChild(arControlsWrap);
 
+  // --- Section: About & Licenses ---
+  const aboutSection = addSection('About & Attributions');
+  const licenseOpenBtn = document.createElement('button');
+  licenseOpenBtn.type = 'button';
+  licenseOpenBtn.className = 'about-license-btn';
+  licenseOpenBtn.textContent = '📜 View Licenses & Attributions';
+  aboutSection.appendChild(licenseOpenBtn);
+
+  // Licenses Modal
+  const modalBackdrop = document.createElement('div');
+  modalBackdrop.className = 'license-modal-backdrop';
+  modalBackdrop.setAttribute('role', 'dialog');
+  modalBackdrop.setAttribute('aria-modal', 'true');
+  modalBackdrop.setAttribute('aria-label', 'Licenses and Attributions');
+
+  const modalCard = document.createElement('div');
+  modalCard.className = 'license-modal-card';
+
+  const modalHeader = document.createElement('div');
+  modalHeader.className = 'license-modal-header';
+
+  const modalTitle = document.createElement('h3');
+  modalTitle.className = 'license-modal-title';
+  modalTitle.textContent = '📜 Licenses & Third-Party Attributions';
+
+  const modalClose = document.createElement('button');
+  modalClose.type = 'button';
+  modalClose.className = 'license-modal-close';
+  modalClose.textContent = '✕';
+  modalClose.setAttribute('aria-label', 'Close dialog');
+
+  modalHeader.appendChild(modalTitle);
+  modalHeader.appendChild(modalClose);
+  modalCard.appendChild(modalHeader);
+
+  const modalBody = document.createElement('div');
+  modalBody.className = 'license-modal-body';
+
+  const licenseItems = [
+    {
+      name: 'Mochi-Puff (fursim)',
+      tag: 'MIT',
+      desc: 'Project codebase, GPGPU compute shaders, and interactive 3D simulation.',
+      tagClass: ''
+    },
+    {
+      name: 'three.js (v0.169.0)',
+      tag: 'MIT',
+      desc: 'Copyright © 2010-2024 Three.js Authors (Ricardo Cabello / mrdoob). 3D WebGL renderer and scene graph.',
+      tagClass: ''
+    },
+    {
+      name: 'react & react-dom (v19.0.1)',
+      tag: 'MIT',
+      desc: 'Copyright © Meta Platforms, Inc. and affiliates. Frontend declarative component rendering.',
+      tagClass: ''
+    },
+    {
+      name: 'vite (v8.3.0) & @vitejs/plugin-react',
+      tag: 'MIT',
+      desc: 'Copyright © 2019-present Evan You & Vite Contributors. Dev server, HMR, and bundling engine.',
+      tagClass: ''
+    },
+    {
+      name: '@google/genai (v2.4.0)',
+      tag: 'Apache-2.0',
+      desc: 'Copyright 2024-present Google LLC. Google GenAI TypeScript SDK for AI Studio models.',
+      tagClass: 'apache'
+    },
+    {
+      name: 'TypeScript (v7.0.2)',
+      tag: 'Apache-2.0',
+      desc: 'Copyright © Microsoft Corporation. Static type checking and compiler.',
+      tagClass: 'apache'
+    },
+    {
+      name: 'Google Sans & Google Sans Text',
+      tag: 'Google Fonts / OFL',
+      desc: 'Typography system provided via Google Fonts under Open Font License / Terms of Service.',
+      tagClass: 'ofl'
+    },
+    {
+      name: 'Marschner Hair Reflectance Model (2003)',
+      tag: 'Research Paper',
+      desc: 'S. R. Marschner, H. W. Jensen, M. Cammarano, S. Worley, P. Hanrahan (ACM SIGGRAPH 2003). Dual-specular R/TRT lobes and TT transmission highlights.',
+      tagClass: ''
+    },
+    {
+      name: 'Kajiya-Kay Fur Shading (1989)',
+      tag: 'Research Paper',
+      desc: 'J. T. Kajiya, T. L. Kay (ACM SIGGRAPH 1989). Cylindrical tangent-space hair specularity.',
+      tagClass: ''
+    },
+    {
+      name: 'Volumetric Shells & Fins (2001)',
+      tag: 'Research Paper',
+      desc: 'J. Lengyel, E. Praun, A. Finkelstein, H. Hoppe (ACM SIGGRAPH 2001). Real-time fur over arbitrary surfaces.',
+      tagClass: ''
+    }
+  ];
+
+  for (const item of licenseItems) {
+    const itemCard = document.createElement('div');
+    itemCard.className = 'license-card-item';
+
+    const itemHead = document.createElement('div');
+    itemHead.className = 'license-card-head';
+
+    const itemName = document.createElement('span');
+    itemName.className = 'license-card-name';
+    itemName.textContent = item.name;
+
+    const itemTag = document.createElement('span');
+    itemTag.className = `license-tag ${item.tagClass || ''}`.trim();
+    itemTag.textContent = item.tag;
+
+    itemHead.appendChild(itemName);
+    itemHead.appendChild(itemTag);
+
+    const itemDesc = document.createElement('div');
+    itemDesc.className = 'license-card-desc';
+    itemDesc.textContent = item.desc;
+
+    itemCard.appendChild(itemHead);
+    itemCard.appendChild(itemDesc);
+    modalBody.appendChild(itemCard);
+  }
+
+  modalCard.appendChild(modalBody);
+  modalBackdrop.appendChild(modalCard);
+  document.body.appendChild(modalBackdrop);
+
+  function openLicenseModal() {
+    modalBackdrop.classList.add('open');
+  }
+
+  function closeLicenseModal() {
+    modalBackdrop.classList.remove('open');
+  }
+
+  licenseOpenBtn.addEventListener('click', openLicenseModal);
+  modalClose.addEventListener('click', closeLicenseModal);
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) {
+      closeLicenseModal();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalBackdrop.classList.contains('open')) {
+      closeLicenseModal();
+    }
+  });
+
   function updateGPUFurModeUI(isGpuFur) {
     const enabled = Boolean(isGpuFur);
     state.gpuFurEnabled = enabled;

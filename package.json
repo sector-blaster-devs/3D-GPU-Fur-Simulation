@@ -2,6 +2,7 @@
   "name": "fursim",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Interactive 3D WebGL2/GPGPU fur physics and Marschner hair shading simulation for a stylized creature across studio, nature, and live AR camera environments.",
   "scripts": {
     "predev": "[ -d node_modules/.bin ] || bun install || npm install",
