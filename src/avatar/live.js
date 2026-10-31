@@ -61,17 +61,32 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
   async function start() {
     trackBtn.textContent = 'Starting...';
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
-      streams.push(stream);
+      // Ask for each device on its own: one blocked device must not cost the other.
+      const cam = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } }).catch((e) => e);
+      const mic = await navigator.mediaDevices.getUserMedia({ audio: true }).catch((e) => e);
+      const camOk = cam instanceof MediaStream;
+      const micOk = mic instanceof MediaStream;
+      if (!camOk && !micOk) throw cam;
+      if (micOk) {
+        streams.push(mic);
+        const ctx = new AudioContext();
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 512;
+        ctx.createMediaStreamSource(mic).connect(analyser);
+      }
+      if (!camOk) {
+        tracking = true;
+        trackBtn.textContent = 'Stop voice';
+        notify(`Camera blocked (${reason(cam)}). Voice only.`);
+        return;
+      }
+      streams.push(cam);
       video = document.createElement('video');
       video.muted = true;
       video.playsInline = true;
-      video.srcObject = new MediaStream(stream.getVideoTracks());
+      video.srcObject = cam;
       await video.play();
-      const ctx = new AudioContext();
-      analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      ctx.createMediaStreamSource(new MediaStream(stream.getAudioTracks())).connect(analyser);
+      if (!micOk) notify(`Microphone blocked (${reason(mic)}). Head only.`);
       const vision = await import(/* @vite-ignore */ `${VISION}/vision_bundle.mjs`);
       const files = await vision.FilesetResolver.forVisionTasks(`${VISION}/wasm`);
       landmarker = await vision.FaceLandmarker.createFromOptions(files, {
@@ -82,9 +97,27 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
       trackBtn.textContent = 'Stop head + voice';
     } catch (err) {
       stop();
-      trackBtn.textContent = 'Head + voice (unavailable)';
+      notify(`Camera and microphone unavailable (${reason(err)}).`);
       console.warn('Head + voice:', err);
     }
+  }
+
+  // "Permission denied by system" is the operating system refusing, not the browser.
+  function reason(err) {
+    const msg = (err && err.message) || String(err);
+    if (/system/i.test(msg)) return 'blocked by your system privacy settings: allow camera / microphone access for your browser in Windows Settings > Privacy & security, or macOS System Settings > Privacy';
+    if (err && err.name === 'NotReadableError') return 'in use by another app, e.g. OBS';
+    if (err && err.name === 'NotAllowedError') return 'permission denied in the browser: allow it from the lock icon in the address bar';
+    if (err && err.name === 'NotFoundError') return 'no device found';
+    return msg;
+  }
+
+  function notify(text) {
+    const n = document.createElement('div');
+    n.textContent = text;
+    n.style.cssText = 'position:fixed;left:16px;bottom:68px;z-index:55;max-width:min(520px,calc(100vw - 32px));padding:10px 14px;border-radius:10px;background:rgba(17,24,38,.95);border:1px solid #304056;color:#f1f5fb;font:14px/1.4 system-ui,sans-serif';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 9000);
   }
 
   function stop() {
@@ -112,7 +145,7 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
 
   // Call before creature.update(): head pose drives the creature's own look tracking.
   function tick() {
-    if (tracking && landmarker && video && video.readyState >= 2) {
+    if (tracking && landmarker && video && video.readyState >= 2 && video.srcObject) {
       const r = landmarker.detectForVideo(video, performance.now());
       const mat = r.facialTransformationMatrixes && r.facialTransformationMatrixes[0];
       if (mat) {
