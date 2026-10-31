@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createBlobCreature } from './blobCreature.js';
 import { createGPUFurPhysics } from './gpuPhysics.js';
 import { createGPUFurSystem } from './furSystem.js';
+import { setupLive } from './avatar/live.js';
 import { createMinimalUI, FUR_PRESETS } from './ui.js';
 import { createEnvironmentManager } from './environments.js';
 
@@ -354,6 +355,7 @@ envManager.onLightEstimated((lightInfo) => {
 // 6. Interactive 3D Pointer Raycasting for Petting, Combing & Booping
 const raycaster = new THREE.Raycaster();
 const pointerNDC = new THREE.Vector2(0, 0);
+const live = setupLive({ creature, furSystem, pointerNDC });
 const pointerLocalPos = new THREE.Vector3(0, 0, 2);
 const prevPointerLocalPos = new THREE.Vector3(0, 0, 2);
 const pointerVelocity = new THREE.Vector3(0, 0, 0);
@@ -513,6 +515,7 @@ function animate() {
   pointerVelocity.multiplyScalar(Math.exp(-dt * 12.0));
 
   // Update creature breathing, eye tracking, viewer-facing AR orientation, and bounce inertia
+  live.tick();
   creature.update(dt, pointerNDC, camera.position, simState.environment === 'ar');
 
   // Update active 3D / AR environment (Studio, Meadow, Cozy Highrise, AR View)

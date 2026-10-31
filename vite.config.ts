@@ -13,7 +13,6 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         grass: resolve(__dirname, 'grass.html'),
-        avatar: resolve(__dirname, 'avatar.html'),
         output: resolve(__dirname, 'output.html'),
       },
     },

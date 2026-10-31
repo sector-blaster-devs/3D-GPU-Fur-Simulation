@@ -2,31 +2,28 @@
 
 Real-time fur in the browser (WebGL2, Three.js), a streaming avatar built on it, and a Godot 4 port of the fur for games. By [Round Up Studio](https://roundup.studio).
 
-**Try the avatar:** https://fluff-avatar.pages.dev
+**Try it:** https://fluff-avatar.pages.dev
 
-| Control page | Output window (what OBS captures) |
+| The fur demo, fully adjustable | Detached preview (what OBS captures) |
 |---|---|
-| ![Fluff Avatar control page](docs/control.png) | ![The fluff creature on a green key background](docs/output.png) |
+| ![Mochi-Puff in the fur demo with its settings panel](docs/ui.png) | ![Mochi-Puff alone on a green key background](docs/output.png) |
 
-## Fluff Avatar
+## Streaming: detached preview + head and voice
 
-A furry creature that follows your head and opens its mouth when you talk. Put it in OBS or any streaming tool instead of your face.
+Bottom-left of the demo:
 
-1. Open the page and press **Start camera**. A notice explains what happens before your browser asks for the camera.
-2. Press **Open output window**. That window shows only the creature, on a solid green, blue or magenta background.
-3. In OBS, add a **Window Capture** of "Fluff Avatar Output", then a **Chroma Key** filter in the same colour.
-
-Pick the coat, the background colour and how strongly it follows your head on the control page. Changes reach the output window live.
+- **Detach preview** opens a window with only Mochi-Puff on a key colour (click it to cycle green, blue and magenta). It mirrors every setting from the demo's panel live: coat, colours, lighting and wind. In OBS, add a **Window Capture** of that window plus a **Chroma Key** filter. Your stream gets the creature without the settings UI.
+- **Head + voice**: Mochi-Puff follows your head (camera) and opens its mouth when you speak (microphone). A notice explains both before the browser asks.
 
 **Privacy:**
-- Face tracking ([MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)) runs on your device, in the browser tab.
-- The video is never recorded, stored or uploaded.
-- Only head angles and mouth openness pass to the output window, through `BroadcastChannel` inside the same browser.
-- No microphone, no server.
+- The camera and microphone are processed only on your device, in the browser tab. Head tracking is [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker); the microphone only measures loudness.
+- Nothing is recorded, stored or uploaded.
+- Head angles, mouth openness and settings pass to the preview window through `BroadcastChannel` inside the same browser.
+- No server.
 
 ## Fur demo
 
-`index.html` is the original interactive demo: 64 volumetric shells and 60,000 instanced strands, GPGPU spring physics, and Marschner / Kajiya-Kay hair shading, across studio, nature and AR scenes. `grass.html` is a 100k-blade grass painter on the same techniques.
+`index.html` is the interactive demo: 64 volumetric shells and 60,000 instanced strands, GPGPU spring physics, and Marschner / Kajiya-Kay hair shading, across studio, nature and AR scenes. `grass.html` is a 100k-blade grass painter on the same techniques.
 
 ## Godot port
 
@@ -36,7 +33,7 @@ Pick the coat, the background colour and how strongly it follows your head on th
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000, avatar at /avatar.html
+npm run dev        # http://localhost:3000
 npm run build      # static site in dist/
 ```
 
