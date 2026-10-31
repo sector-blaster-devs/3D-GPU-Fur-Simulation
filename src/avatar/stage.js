@@ -20,7 +20,7 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 50);
-camera.position.set(0, 0.2, 6.0);
+camera.position.set(0, 0.15, 8.6);
 camera.lookAt(0, 0.05, 0);
 
 const key = new THREE.DirectionalLight('#fff7ed', 1.9);

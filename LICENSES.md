@@ -104,3 +104,13 @@ The real-time shader pipelines and simulation dynamics implemented in this proje
 4. **Simplex Noise & 3D Procedural Dynamics**:
    - *Reference*: Stefan Gustavson (Linköping University) / Ian McEwan (Ashima Arts).
    - *License*: Public Domain / MIT-compatible academic use.
+
+---
+
+## 6. Fluff Avatar runtime (loaded from CDN, not bundled)
+
+### MediaPipe Tasks Vision (`@mediapipe/tasks-vision`) and Face Landmarker model
+- **License**: Apache License, Version 2.0
+- **Copyright**: Copyright The MediaPipe Authors (Google LLC)
+- **Repository**: https://github.com/google-ai-edge/mediapipe
+- **Use**: on-device face tracking for `avatar.html`; the code loads from jsDelivr and the model from Google's storage at runtime.
