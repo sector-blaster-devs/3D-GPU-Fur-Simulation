@@ -12,7 +12,7 @@ Real-time fur in the browser (WebGL2, Three.js), a streaming avatar built on it,
 
 Bottom-left of the demo:
 
-- **Detach preview** opens a window with only Mochi-Puff on a key colour (click it to cycle green, blue and magenta). It mirrors every setting from the demo's panel live: coat, colours, lighting and wind. In OBS, add a **Window Capture** of that window plus a **Chroma Key** filter. Your stream gets the creature without the settings UI.
+- **Detach preview** opens a window with only Mochi-Puff. Click it to cycle the background: green, blue, magenta, **transparent** (for an OBS **Browser Source**: `https://fluff-avatar.pages.dev/output?bg=transparent`, no chroma key needed) and **blurred camera** (your own camera, blurred, behind Mochi; it stays on your device). It mirrors every setting from the demo's panel live: coat, colours, lighting and wind. In OBS, add a **Window Capture** of that window plus a **Chroma Key** filter. Your stream gets the creature without the settings UI.
 - **Head + voice**: Mochi-Puff follows your head (camera) and opens its mouth when you speak (microphone). A notice explains both before the browser asks.
 
 **Privacy:**
