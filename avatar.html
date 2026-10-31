@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluff Avatar</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #111826; color: #f1f5fb; }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    p.lead { color: #aab8cc; margin: 0 0 20px; }
+    .card { background: #1b2638; border: 1px solid #304056; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 12px; margin: 10px 0; }
+    select, input[type=range] { width: 100%; }
+    select { background: #111826; color: inherit; border: 1px solid #304056; border-radius: 8px; padding: 8px; }
+    button { min-height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #304056; background: #1b2638; color: inherit; font: inherit; cursor: pointer; }
+    button.primary { background: #7765f4; border-color: #9a8cff; }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #57d9ea; outline-offset: 2px; }
+    video { width: 100%; border-radius: 8px; background: #000; transform: scaleX(-1); }
+    #status { color: #57d9ea; min-height: 1.5em; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    ol { padding-left: 20px; color: #aab8cc; }
+    #consent { position: fixed; inset: 0; background: rgba(5, 8, 14, 0.85); display: grid; place-items: center; padding: 16px; }
+    #consent[hidden] { display: none; }
+    #consent .card { max-width: 520px; }
+    small { color: #aab8cc; }
+    a { color: #57d9ea; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Fluff Avatar</h1>
+    <p class="lead">A furry creature that follows your head and talks when you talk. Use it in OBS or any streaming tool instead of showing your face.</p>
+
+    <div class="card">
+      <p id="status">Camera off.</p>
+      <video id="video" playsinline muted></video>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="open-output">Open output window</button>
+        <button id="restart" onclick="document.getElementById('consent').hidden = false">Start camera</button>
+        <button id="stop" hidden>Stop camera</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Coat <select id="preset"></select></label>
+      <label>Background <select id="background"></select></label>
+      <label>Head motion <input id="sensitivity" type="range" min="0.3" max="2" step="0.1" value="1" /></label>
+    </div>
+
+    <div class="card">
+      <strong>Use it in OBS</strong>
+      <ol>
+        <li>Press "Open output window". Keep that window open (it may sit behind others).</li>
+        <li>In OBS add a Window Capture source and pick the "Fluff Avatar Output" window.</li>
+        <li>Right-click the source, Filters, add Chroma Key, and match the background colour you chose here.</li>
+      </ol>
+      <small>The output window shows only the creature, so your stream never shows these settings.</small>
+    </div>
+
+    <small>Fur rendering and creature: <a href="https://github.com/sector-blaster-devs/3D-GPU-Fur-Simulation">3D GPU Fur Simulation</a>, MIT. Face tracking: Google MediaPipe Face Landmarker (Apache 2.0).</small>
+  </main>
+
+  <div id="consent" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+    <div class="card">
+      <h2 id="consent-title" style="margin-top:0">Before we use your camera</h2>
+      <p>Your browser will next ask to use your camera. Here is what happens if you allow it:</p>
+      <ul>
+        <li>The video is processed only on this device, in this browser tab, to find the angle of your head and how open your mouth is.</li>
+        <li>The video is never recorded, stored or sent anywhere. Only those few numbers go to the output window, inside this browser.</li>
+        <li>To do the tracking, this page downloads Google's free face-tracking model and code (from Google and jsDelivr). Your video is not sent to them.</li>
+        <li>The microphone is not used.</li>
+        <li>Stop any time with "Stop camera", or close the tab.</li>
+      </ul>
+      <div class="row">
+        <button class="primary" id="consent-ok">Continue to camera</button>
+        <button id="consent-no">Not now</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/avatar/control.js"></script>
+</body>
+</html>

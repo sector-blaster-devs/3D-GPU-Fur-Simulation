@@ -345,6 +345,18 @@ export function createBlobCreature() {
     faceGroup.add(arc);
   }
 
+  // Open mouth for the streaming avatar (driven by setMouthOpen, closed by default)
+  const mouthOpen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 14), mouthMat);
+  mouthOpen.position.set(0, 0.0, 1.03);
+  mouthOpen.scale.set(1.0, 0.01, 0.45);
+  mouthOpen.visible = false;
+  faceGroup.add(mouthOpen);
+  function setMouthOpen(amount) {
+    const v = Math.max(0, Math.min(1, amount));
+    mouthOpen.visible = v > 0.04;
+    mouthOpen.scale.y = 0.05 + v * 0.95;
+  }
+
   // Animation & physics state for creature motion (coupled to GPGPU fur inertia)
   const animState = {
     time: 0,
@@ -609,6 +621,7 @@ export function createBlobCreature() {
     resetPlacement,
     isPlaced: () => isPlaced,
     getAnchorPosition: () => anchorPos,
+    setMouthOpen,
     update
   };
 }
