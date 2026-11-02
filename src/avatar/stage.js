@@ -82,15 +82,19 @@ creature.root.add(fur.shellMesh);
 creature.root.add(fur.strandMesh);
 
 const look = new THREE.Vector2();
-let roll = 0;
+const head = { yaw: 0, pitch: 0, roll: 0 };
 let mouth = 0;
+let blink = 0;
 const channel = new BroadcastChannel(CHANNEL);
 channel.onmessage = (e) => {
   const m = e.data;
   if (!m || m.type !== 'state') return;
   look.set(m.pose.lookX, m.pose.lookY);
-  roll = m.pose.roll;
+  head.yaw = m.pose.yaw;
+  head.pitch = m.pose.pitch;
+  head.roll = m.pose.roll;
   mouth = m.pose.mouth;
+  blink = m.pose.blink;
   if (m.skin) creature.skinMaterial.color.set(m.skin);
   const u = fur.sharedUniforms;
   for (const [name, v] of Object.entries(m.uniforms || {})) {
@@ -112,8 +116,11 @@ let elapsed = 0;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.033);
   elapsed += dt;
+  creature.animState.externalBlink = blink;
   creature.update(dt, look, camera.position, false);
-  creature.root.rotation.z = roll;
+  creature.root.rotation.y += head.yaw;
+  creature.root.rotation.x += head.pitch;
+  creature.root.rotation.z += head.roll;
   creature.setMouthOpen(mouth);
   const u = fur.sharedUniforms;
   u.uPhysicsTex.value = physics.isGPGPUActive ? physics.step({

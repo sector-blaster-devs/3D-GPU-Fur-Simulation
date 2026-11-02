@@ -9,9 +9,30 @@ import { CHANNEL } from './channel.js';
 const VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 
+// One Euro filter: steady when your head is still, no lag when it moves. This is what
+// removes the jitter without making the creature feel slow.
+function oneEuro(minCutoff = 1.2, beta = 6.0, dCutoff = 1.0) {
+  let x = null;
+  let dx = 0;
+  let last = 0;
+  const alpha = (cutoff, dt) => 1 / (1 + 1 / (2 * Math.PI * cutoff * dt));
+  return (value, now) => {
+    if (x === null) { x = value; last = now; return x; }
+    const dt = Math.max((now - last) / 1000, 1 / 120);
+    last = now;
+    dx += alpha(dCutoff, dt) * ((value - x) / dt - dx);
+    x += alpha(minCutoff + beta * Math.abs(dx), dt) * (value - x);
+    return x;
+  };
+}
+
+const HEAD_GAIN = 1.25;
+
 export function setupLive({ creature, furSystem, pointerNDC }) {
   const channel = new BroadcastChannel(CHANNEL);
-  const pose = { lookX: 0, lookY: 0, roll: 0, mouth: 0 };
+  const pose = { lookX: 0, lookY: 0, yaw: 0, pitch: 0, roll: 0, mouth: 0, jaw: 0, blink: 0 };
+  const filters = { yaw: oneEuro(), pitch: oneEuro(), roll: oneEuro(), jaw: oneEuro(3, 8), blink: oneEuro(8, 10) };
+  let lastVideoTime = -1;
   let tracking = false;
   let landmarker = null;
   let video = null;
@@ -91,7 +112,7 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
       const files = await vision.FilesetResolver.forVisionTasks(`${VISION}/wasm`);
       landmarker = await vision.FaceLandmarker.createFromOptions(files, {
         baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' },
-        runningMode: 'VIDEO', numFaces: 1, outputFacialTransformationMatrixes: true,
+        runningMode: 'VIDEO', numFaces: 1, outputFacialTransformationMatrixes: true, outputFaceBlendshapes: true,
       });
       tracking = true;
       trackBtn.textContent = 'Stop head + voice';
@@ -125,8 +146,8 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
     streams.forEach((s) => s.getTracks().forEach((t) => t.stop()));
     streams = [];
     analyser = null;
-    pose.mouth = 0;
-    pose.roll = 0;
+    Object.assign(pose, { yaw: 0, pitch: 0, roll: 0, mouth: 0, jaw: 0, blink: 0 });
+    creature.animState.externalBlink = 0;
     creature.setMouthOpen(0);
     trackBtn.textContent = 'Head + voice';
   }
@@ -145,17 +166,27 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
 
   // Call before creature.update(): head pose drives the creature's own look tracking.
   function tick() {
-    if (tracking && landmarker && video && video.readyState >= 2 && video.srcObject) {
-      const r = landmarker.detectForVideo(video, performance.now());
+    // Only when the camera has a NEW frame: detecting on every display frame blocked the
+    // render loop for nothing, which was a big part of the stutter.
+    if (tracking && landmarker && video && video.srcObject && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+      lastVideoTime = video.currentTime;
+      const now = performance.now();
+      const r = landmarker.detectForVideo(video, now);
       const mat = r.facialTransformationMatrixes && r.facialTransformationMatrixes[0];
       if (mat) {
         euler.setFromRotationMatrix(m4.fromArray(mat.data));
-        pose.lookX = THREE.MathUtils.clamp(-euler.y * 2.2, -1, 1);
-        pose.lookY = THREE.MathUtils.clamp(euler.x * 2.2, -1, 1);
-        pose.roll = THREE.MathUtils.lerp(pose.roll, -euler.z * 0.8, 0.3);
+        pose.yaw = filters.yaw(-euler.y, now);
+        pose.pitch = filters.pitch(-euler.x, now);
+        pose.roll = filters.roll(-euler.z, now);
+        const shapes = (r.faceBlendshapes && r.faceBlendshapes[0] && r.faceBlendshapes[0].categories) || [];
+        const score = (name) => { const c = shapes.find((s) => s.categoryName === name); return c ? c.score : 0; };
+        pose.jaw = filters.jaw(score('jawOpen'), now);
+        pose.blink = filters.blink(Math.max(score('eyeBlinkLeft'), score('eyeBlinkRight')), now);
       }
-      pointerNDC.set(pose.lookX, pose.lookY);
-      creature.root.rotation.z = pose.roll;
+    }
+    if (tracking && video && video.srcObject) {
+      // Eyes lead the head, like a real look.
+      pointerNDC.set(THREE.MathUtils.clamp(pose.yaw * 2.5, -1, 1), THREE.MathUtils.clamp(-pose.pitch * 2.5, -1, 1));
     }
     if (analyser) {
       analyser.getByteTimeDomainData(level);
@@ -163,15 +194,28 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
       for (let i = 0; i < level.length; i++) { const d = (level[i] - 128) / 128; sum += d * d; }
       const rms = Math.sqrt(sum / level.length);
       pose.mouth = THREE.MathUtils.lerp(pose.mouth, THREE.MathUtils.clamp((rms - 0.02) * 9, 0, 1), 0.5);
-      creature.setMouthOpen(pose.mouth);
+    }
+  }
+
+  // After creature.update(), which rewrites the root rotation every frame: the head turn
+  // goes on top of its idle sway, at full range, so the motion is recognisably yours.
+  function afterUpdate() {
+    const mouth = Math.max(pose.mouth, Math.min(1, pose.jaw * 1.5));
+    if (tracking) {
+      creature.root.rotation.y += pose.yaw * HEAD_GAIN;
+      creature.root.rotation.x += pose.pitch * HEAD_GAIN;
+      creature.root.rotation.z += pose.roll * HEAD_GAIN;
+      creature.setMouthOpen(mouth);
+      creature.animState.externalBlink = pose.blink > 0.45 ? pose.blink : 0;
     }
     channel.postMessage({
       type: 'state',
-      pose: { lookX: pointerNDC.x, lookY: pointerNDC.y, roll: creature.root.rotation.z, mouth: pose.mouth },
+      pose: { lookX: pointerNDC.x, lookY: pointerNDC.y, yaw: pose.yaw * HEAD_GAIN, pitch: pose.pitch * HEAD_GAIN,
+        roll: pose.roll * HEAD_GAIN, mouth, blink: creature.animState.externalBlink || 0 },
       uniforms: serializeUniforms(),
       skin: '#' + creature.skinMaterial.color.getHexString(),
     });
   }
 
-  return { tick };
+  return { tick, afterUpdate };
 }

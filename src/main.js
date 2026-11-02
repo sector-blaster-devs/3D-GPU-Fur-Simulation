@@ -517,6 +517,7 @@ function animate() {
   // Update creature breathing, eye tracking, viewer-facing AR orientation, and bounce inertia
   live.tick();
   creature.update(dt, pointerNDC, camera.position, simState.environment === 'ar');
+  live.afterUpdate();
 
   // Update active 3D / AR environment (Studio, Meadow, Cozy Highrise, AR View)
   envManager.update(elapsedTime, simState.windStrength, creature.root);

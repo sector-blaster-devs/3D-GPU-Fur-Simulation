@@ -602,6 +602,8 @@ export function createBlobCreature() {
       blinkScaleY = Math.min(blinkScaleY, 0.18);
     }
 
+    // A real blink from the streaming avatar's face tracking wins over the idle blink.
+    blinkScaleY = Math.min(blinkScaleY, 1 - 0.9 * (animState.externalBlink || 0));
     for (const eye of eyes) {
       eye.pivot.scale.y = blinkScaleY;
       eye.catchlightMain.position.x = -eye.side * 0.042 + animState.currentLook.x * 0.028;
