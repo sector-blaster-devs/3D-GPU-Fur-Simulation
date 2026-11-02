@@ -112,9 +112,9 @@ float strand(vec2 uv, float h, float far, out float seed, out float edge) {
 	seed = r.x;
 	edge = 1.0;
 
-	// Far away the strands shorten to a lower, narrower spread of heights: the coat
-	// keeps a fibrous top and silhouette without the tall tips that sparkle.
-	float max_h = mix(mix(0.32, 1.0, r.z), mix(0.3, 0.7, r.z), far) * clamp(density * 1.08, 0.22, 1.0);
+	// Far away the shortest strands drop out but the tall ones stay: at game distance the
+	// silhouette is what reads as fur. (Highlights fade in light(), so tips don't sparkle.)
+	float max_h = mix(mix(0.32, 1.0, r.z), mix(0.5, 1.0, r.z), far) * clamp(density * 1.08, 0.22, 1.0);
 	if (h > max_h) {
 		return 0.0;
 	}
@@ -130,7 +130,7 @@ float strand(vec2 uv, float h, float far, out float seed, out float edge) {
 	float radius = strand_width * mix(0.86, 1.10, fract(r.x * 7.13)) * (1.0 - pow(nh, 2.3));
 	// Closed undercoat at the skin, so the coat reads as a volume, not bristles on skin.
 	radius = max(radius, 0.9 * (1.0 - smoothstep(0.1, 0.3, h)));
-	radius = mix(radius, 0.7, far);
+	radius = mix(radius, 0.6, far);
 	float d = length(local - centre);
 	edge = clamp(d / max(radius, 1e-3), 0.0, 1.0);
 	return step(d, radius);

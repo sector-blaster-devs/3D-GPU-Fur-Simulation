@@ -1,7 +1,7 @@
 extends Node
 ## FurCoat — shell fur on any rigged (or static) model, Compatibility/WebGL safe.
 ##
-##     var coat = preload("res://godot/FurCoat.gd").new()
+##     var coat = preload(FUR_SHADER.resource_path.get_base_dir().path_join("FurCoat.gd")).new()
 ##     coat.shells = 12
 ##     model.add_child(coat)      # builds on _ready; model = the loaded GLB root
 ##
@@ -48,7 +48,7 @@ const THIN_RATIO := 2.0
 ## 8-12 for crowds / mobile, 16-24 for a hero close-up.
 @export var shells := 16
 ## Fur length as a fraction of the model's longest side.
-@export var length_frac := 0.03
+@export var length_frac := 0.045
 ## Strand cells across the model's longest side. Higher = finer fur.
 @export var cells_across := 520.0
 ## Strand radius in cell units (0.5 = neighbours touch).
@@ -96,13 +96,18 @@ const PRESETS := {
 	"husky.glb": {},
 	"fox.glb": {"tip_lift": 0.3, "thin_part_floor": 0.07},
 	"shibainu.glb": {},
-	"alpaca.glb": {"length_frac": 0.05, "curliness": 0.6, "clumping": 0.7, "groom": 0.15},
+	"alpaca.glb": {"length_frac": 0.065, "curliness": 0.6, "clumping": 0.7, "groom": 0.15},
 	"horse.glb": {"length_frac": 0.008, "cells_across": 780.0,
 		"length_by_material": {"hair": 7.5, "mane": 7.5}, "fall_by_material": {"hair": 1.0, "mane": 1.0}},
 	"horse_white.glb": {"length_frac": 0.008, "cells_across": 780.0,
 		"length_by_material": {"hair": 7.5, "mane": 7.5}, "fall_by_material": {"hair": 1.0, "mane": 1.0}},
-	"bear.glb": {"length_frac": 0.035, "cells_across": 560.0, "bald_below_brightness": 0.03},
-	"characters_pug.glb": {"length_frac": 0.02, "bald_below_brightness": 0.03},
+	"bear.glb": {"length_frac": 0.05, "cells_across": 560.0, "bald_below_brightness": 0.03},
+	"deer.glb": {"length_frac": 0.022, "cells_across": 640.0},
+	"stag.glb": {"length_frac": 0.022, "cells_across": 640.0},
+	"bull.glb": {"length_frac": 0.018, "cells_across": 640.0},
+	"cow.glb": {"length_frac": 0.018, "cells_across": 640.0},
+	"dog.glb": {},
+	"characters_pug.glb": {"length_frac": 0.03, "bald_below_brightness": 0.03},
 }
 
 ## Baked coat meshes shared between animals of the same model. See _baked_for.
