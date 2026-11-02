@@ -234,6 +234,7 @@ export const SHELL_FRAGMENT_SHADER = /* glsl */ `
   uniform float uClumping;
   uniform float uCurliness;
   uniform float uGpuFurMode;
+  uniform float uMouthOpen;
 
   varying float vLayerHeight;
   varying float vFollicleMask;
@@ -261,6 +262,11 @@ export const SHELL_FRAGMENT_SHADER = /* glsl */ `
   void main() {
     if (vFollicleMask < 0.04) {
       discard;
+    }
+    // The fur parts around the open mouth.
+    if (uMouthOpen > 0.04) {
+      vec3 toMouth = (vLocalPos - vec3(0.0, -0.085, 1.0)) / vec3(0.2, 0.05 + 0.17 * uMouthOpen, 0.4);
+      if (dot(toMouth, toMouth) < 1.0) discard;
     }
 
     // 2D surface-locked follicle coordinates (no 3D Cartesian Z-slicing or contour bands)
@@ -333,6 +339,7 @@ export const STRAND_VERTEX_SHADER = /* glsl */ `
   uniform float uGpuFurMode;
   uniform vec3 uWebGLInertia;
   uniform float uBoopShockwave;
+  uniform float uMouthOpen;
 
   varying float vHeight;
   varying float vRibbonU;
@@ -356,7 +363,8 @@ export const STRAND_VERTEX_SHADER = /* glsl */ `
     vStrandSeed = aStrandSeed;
 
     // Density culling in vertex shader (collapse inactive strands to zero area)
-    if (aStrandSeed > uFurDensity || aMaskValue < 0.05) {
+    vec3 toMouth = (aRootPos - vec3(0.0, -0.085, 1.0)) / vec3(0.25, 0.08 + 0.2 * uMouthOpen, 0.45);
+    if (aStrandSeed > uFurDensity || aMaskValue < 0.05 || (uMouthOpen > 0.04 && dot(toMouth, toMouth) < 1.0)) {
       gl_Position = vec4(2.0, 2.0, 2.0, 0.0);
       return;
     }

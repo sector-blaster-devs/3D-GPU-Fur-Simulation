@@ -5,6 +5,7 @@
 //   speak (microphone). Both are processed on this device only; a notice comes first.
 import * as THREE from 'three';
 import { CHANNEL } from './channel.js';
+import { CHARACTERS, currentCharacterKey } from '../characters.js';
 
 const VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
@@ -53,9 +54,18 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
   };
   const detachBtn = mk('Detach preview');
   const trackBtn = mk('Head + voice');
+  // Character picker. A body is baked once at load, so switching reloads the page;
+  // the detached preview follows by itself.
+  const picker = document.createElement('select');
+  picker.setAttribute('aria-label', 'Character');
+  picker.style.cssText = 'min-height:40px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(17,24,38,.85);color:#fff';
+  for (const [key, c] of Object.entries(CHARACTERS)) picker.add(new Option(c.name, key));
+  picker.value = currentCharacterKey();
+  picker.onchange = () => { location.search = `?character=${picker.value}`; };
+  bar.prepend(picker);
   document.body.appendChild(bar);
 
-  detachBtn.onclick = () => window.open('output.html', 'fluff-output', 'popup,width=720,height=720');
+  detachBtn.onclick = () => window.open(`output.html?character=${currentCharacterKey()}`, 'fluff-output', 'popup,width=720,height=720');
   trackBtn.onclick = () => (tracking ? stop() : showNotice());
 
   function showNotice() {
@@ -210,6 +220,7 @@ export function setupLive({ creature, furSystem, pointerNDC }) {
     }
     channel.postMessage({
       type: 'state',
+      character: currentCharacterKey(),
       pose: { lookX: pointerNDC.x, lookY: pointerNDC.y, yaw: pose.yaw * HEAD_GAIN, pitch: pose.pitch * HEAD_GAIN,
         roll: pose.roll * HEAD_GAIN, mouth, blink: creature.animState.externalBlink || 0 },
       uniforms: serializeUniforms(),

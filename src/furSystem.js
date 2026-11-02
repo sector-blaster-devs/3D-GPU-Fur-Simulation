@@ -75,7 +75,8 @@ export function createGPUFurSystem(baseGeometry, initialParams) {
     uGpuFurMode: { value: gpuFurEnabled ? 1.0 : 0.0 },
     uShellCountScale: { value: gpuFurEnabled ? 1.0 : SHELL_COUNT / WEBGL_SHELL_COUNT },
     uWebGLInertia: { value: new THREE.Vector3(0, 0, 0) },
-    uBoopShockwave: { value: 0.0 }
+    uBoopShockwave: { value: 0.0 },
+    uMouthOpen: { value: 0.0 }
   };
 
   // ---------------------------------------------------------------------------

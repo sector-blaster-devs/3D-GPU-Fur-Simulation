@@ -21,6 +21,10 @@ Bottom-left of the demo:
 - Head angles, mouth openness and settings pass to the preview window through `BroadcastChannel` inside the same browser.
 - No server.
 
+## Characters
+
+Mochi-Puff, Bun, Kitty and Cub: pick one bottom-left. They are sculpted in code in this repo (`src/characters.js`, `src/blobCreature.js`), so they are MIT with no third-party model licence. Each has a real mouth that opens through the fur, driven by your jaw and voice.
+
 ## Fur demo
 
 `index.html` is the interactive demo: 64 volumetric shells and 60,000 instanced strands, GPGPU spring physics, and Marschner / Kajiya-Kay hair shading, across studio, nature and AR scenes. `grass.html` is a 100k-blade grass painter on the same techniques.

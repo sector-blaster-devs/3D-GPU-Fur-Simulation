@@ -27,10 +27,11 @@ export function evaluateFollicleMask(x, y, z) {
 
   // Small mask right under the pink nose button & mouth
   const mx = x / 1.25;
-  const my = (y - 0.04) * 1.4;
+  const my = (y + 0.05) * 1.4;
   const mz = z - 0.96;
   const distMouth = Math.sqrt(mx * mx + my * my + mz * mz);
-  const mouthMask = 0.22 + 0.78 * smoothstep(0.065, 0.16, distMouth);
+  // Short fur on a muzzle patch, so the mouth stays readable and has room to open.
+  const mouthMask = 0.18 + 0.82 * smoothstep(0.1, 0.34, distMouth);
 
   // Bottom belly contact pad taper
   const bottomMask = smoothstep(-1.05, -0.72, y);
@@ -102,6 +103,8 @@ function smoothstep(edge0, edge1, x) {
  * Sculpt a unit sphere vertex into our cute "Mochi-Puff" blob creature with
  * chubby pear cheeks, perky ears, stubby side arms, and recessed eye sockets.
  */
+let earShape = { earDir: [0.46, 0.86, 0.06], earPower: 14, earHeight: 0.44 };
+
 function sculptBlobPosition(u, v, w) {
   let x = u;
   let y = v;
@@ -121,11 +124,12 @@ function sculptBlobPosition(u, v, w) {
   }
 
   // 2. Perky sculptural ears on top-left and top-right
-  const leftEarDir = normalize3(-0.46, 0.86, 0.06);
-  const rightEarDir = normalize3(0.46, 0.86, 0.06);
+  const [earX, earY, earZ] = earShape.earDir;
+  const leftEarDir = normalize3(-earX, earY, earZ);
+  const rightEarDir = normalize3(earX, earY, earZ);
   const dotLEar = Math.max(0.0, u * leftEarDir[0] + v * leftEarDir[1] + w * leftEarDir[2]);
   const dotREar = Math.max(0.0, u * rightEarDir[0] + v * rightEarDir[1] + w * rightEarDir[2]);
-  const earProfile = Math.pow(Math.max(dotLEar, dotREar), 14.0) * 0.44;
+  const earProfile = Math.pow(Math.max(dotLEar, dotREar), earShape.earPower) * earShape.earHeight;
   x += u * earProfile * 0.75;
   y += v * earProfile * 1.15;
   z += w * earProfile * 0.55;
@@ -215,7 +219,8 @@ export function createOrganicBlobGeometry(widthSegments = 96, heightSegments = 7
  * - Cute sculpted cat-like smile/mouth & nose bean
  * - Interactive boop/jump & breathing physics state
  */
-export function createBlobCreature() {
+export function createBlobCreature(shape = null) {
+  if (shape) earShape = shape;
   const root = new THREE.Group();
   root.name = 'MochiPuffCreature';
 
@@ -335,6 +340,7 @@ export function createBlobCreature() {
   faceGroup.add(nose);
 
   // Cute W-mouth made from two torus arcs
+  const smileArcs = [];
   const mouthMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#3a102e') });
   for (const side of [-1, 1]) {
     const arcGeo = new THREE.TorusGeometry(0.046, 0.013, 10, 20, Math.PI * 0.92);
@@ -343,18 +349,31 @@ export function createBlobCreature() {
     arc.rotation.x = Math.PI + 0.15;
     arc.rotation.y = side * 0.14;
     faceGroup.add(arc);
+    smileArcs.push(arc);
   }
 
-  // Open mouth for the streaming avatar (driven by setMouthOpen, closed by default)
-  const mouthOpen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 14), mouthMat);
-  mouthOpen.position.set(0, 0.0, 1.03);
-  mouthOpen.scale.set(1.0, 0.01, 0.45);
-  mouthOpen.visible = false;
-  faceGroup.add(mouthOpen);
+  // Real open mouth: a dark cavity and a tongue. The fur parts around it in the shaders
+  // (uMouthOpen); animState.mouth carries the amount to them.
+  const mouthGroup = new THREE.Group();
+  mouthGroup.position.set(0, -0.085, 1.0);
+  mouthGroup.visible = false;
+  const cavity = new THREE.Mesh(new THREE.SphereGeometry(0.14, 24, 16), mouthMat);
+  cavity.scale.set(1.15, 1.0, 0.55);
+  mouthGroup.add(cavity);
+  const tongue = new THREE.Mesh(
+    new THREE.SphereGeometry(0.085, 18, 12),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color('#e8688f') })
+  );
+  tongue.scale.set(1.1, 0.5, 0.5);
+  tongue.position.set(0, -0.08, 0.04);
+  mouthGroup.add(tongue);
+  faceGroup.add(mouthGroup);
   function setMouthOpen(amount) {
     const v = Math.max(0, Math.min(1, amount));
-    mouthOpen.visible = v > 0.04;
-    mouthOpen.scale.y = 0.05 + v * 0.95;
+    animState.mouth = v;
+    mouthGroup.visible = v > 0.04;
+    mouthGroup.scale.y = 0.1 + v * 0.95;
+    for (const arc of smileArcs) arc.visible = v < 0.2;
   }
 
   // Animation & physics state for creature motion (coupled to GPGPU fur inertia)

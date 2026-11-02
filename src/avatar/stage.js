@@ -9,6 +9,7 @@ import { createGPUFurPhysics } from '../gpuPhysics.js';
 import { createGPUFurSystem } from '../furSystem.js';
 import { FUR_PRESETS } from '../ui.js';
 import { CHANNEL } from './channel.js';
+import { CHARACTERS, currentCharacterKey } from '../characters.js';
 
 const MODES = ['#00ff00', '#0000ff', '#ff00ff', 'transparent', 'blur'];
 const NAMES = { '#00ff00': 'Green', '#0000ff': 'Blue', '#ff00ff': 'Magenta', transparent: 'Transparent', blur: 'Blurred camera' };
@@ -73,22 +74,28 @@ rim.position.set(-2.4, 1.8, -3.2);
 scene.add(rim);
 scene.add(new THREE.HemisphereLight('#f5d0fe', '#1e1b4b', 0.85));
 
-const creature = createBlobCreature();
+const characterKey = currentCharacterKey();
+const creature = createBlobCreature(CHARACTERS[characterKey]);
 scene.add(creature.root);
 const physics = createGPUFurPhysics(renderer);
-const fur = createGPUFurSystem(creature.bodyGeometry, { ...FUR_PRESETS[0], lightIntensity: 1.35,
+const fur = createGPUFurSystem(creature.bodyGeometry, { ...FUR_PRESETS[CHARACTERS[characterKey].coat], lightIntensity: 1.35,
   rimIntensity: 1.35, windStrength: 0.4, gpuFurEnabled: physics.isGPGPUActive });
 creature.root.add(fur.shellMesh);
 creature.root.add(fur.strandMesh);
 
 const look = new THREE.Vector2();
 const head = { yaw: 0, pitch: 0, roll: 0 };
-let mouth = 0;
+let mouth = Number(new URLSearchParams(location.search).get('mouth')) || 0;
 let blink = 0;
 const channel = new BroadcastChannel(CHANNEL);
 channel.onmessage = (e) => {
   const m = e.data;
   if (!m || m.type !== 'state') return;
+  // The demo switched character: rebuild with the same background.
+  if (m.character && m.character !== characterKey) {
+    location.search = `?character=${m.character}&bg=${MODES[modeIndex].replace('#', '')}`;
+    return;
+  }
   look.set(m.pose.lookX, m.pose.lookY);
   head.yaw = m.pose.yaw;
   head.pitch = m.pose.pitch;
@@ -129,6 +136,7 @@ function frame() {
     pointerLocalPos: zero, pointerVelocity: zero, pointerActive: false, boopShockwave: 0,
   }) : physics.fallbackTexture;
   u.uTime.value = elapsed;
+  u.uMouthOpen.value = creature.animState.mouth || 0;
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

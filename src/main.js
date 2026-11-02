@@ -4,6 +4,7 @@ import { createBlobCreature } from './blobCreature.js';
 import { createGPUFurPhysics } from './gpuPhysics.js';
 import { createGPUFurSystem } from './furSystem.js';
 import { setupLive } from './avatar/live.js';
+import { CHARACTERS, currentCharacterKey } from './characters.js';
 import { createMinimalUI, FUR_PRESETS } from './ui.js';
 import { createEnvironmentManager } from './environments.js';
 
@@ -21,7 +22,7 @@ const initialGpuFur = !forceWebGL;
 
 // Initial state from our Sakura Mochi preset + Studio environment (WebGPU Fur mode by default, WebGL fallback / toggleable)
 const simState = {
-  ...FUR_PRESETS[0],
+  ...FUR_PRESETS[CHARACTERS[currentCharacterKey()].coat],
   keyColor: '#fff7ed',
   lightAngle: -74,
   lightIntensity: 1.35,
@@ -86,7 +87,7 @@ const hemiLight = new THREE.HemisphereLight('#f5d0fe', '#1e1b4b', 0.85);
 scene.add(hemiLight);
 
 // 4. Create Stylized Blob Creature ("Mochi-Puff") + Hybrid GPU Fur + GPGPU Physics
-const creature = createBlobCreature();
+const creature = createBlobCreature(CHARACTERS[currentCharacterKey()]);
 scene.add(creature.root);
 
 const gpuPhysics = createGPUFurPhysics(renderer);
@@ -560,6 +561,7 @@ function animate() {
   u.uPointerActive.value = isPointerOverCreature ? 1.0 : 0.0;
   u.uWebGLInertia.value.copy(webglInertiaDisp);
   u.uBoopShockwave.value = boopShockwave;
+  u.uMouthOpen.value = creature.animState.mouth || 0;
 
   renderer.render(scene, camera);
 }
