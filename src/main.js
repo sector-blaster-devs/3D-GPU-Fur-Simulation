@@ -356,7 +356,7 @@ envManager.onLightEstimated((lightInfo) => {
 // 6. Interactive 3D Pointer Raycasting for Petting, Combing & Booping
 const raycaster = new THREE.Raycaster();
 const pointerNDC = new THREE.Vector2(0, 0);
-const live = setupLive({ creature, furSystem, pointerNDC });
+const live = setupLive({ creature, furSystem, pointerNDC, panel: ui.streamingSection });
 const pointerLocalPos = new THREE.Vector3(0, 0, 2);
 const prevPointerLocalPos = new THREE.Vector3(0, 0, 2);
 const pointerVelocity = new THREE.Vector3(0, 0, 0);

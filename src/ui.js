@@ -1,3 +1,4 @@
+import { CHARACTERS, currentCharacterKey } from './characters.js';
 // Minimalist, XSS-safe Glassmorphic DOM UI for GPU Fur Simulation
 // Features:
 // 1. Primary Scene Selection Menu as a top-floating glass pill bar
@@ -450,6 +451,13 @@ export function createMinimalUI(container, state, onChange) {
     btn.appendChild(pLabel);
 
     btn.addEventListener('click', () => {
+      // Each quick preset is a character: a different body means rebuilding the fur, so reload.
+      const presetIndex = FUR_PRESETS.indexOf(preset);
+      const body = Object.keys(CHARACTERS).find((key) => CHARACTERS[key].coat === presetIndex);
+      if (body && body !== currentCharacterKey()) {
+        location.search = `?character=${body}`;
+        return;
+      }
       Object.keys(preset).forEach((k) => {
         if (k === 'name') return;
         state[k] = preset[k];
@@ -466,6 +474,9 @@ export function createMinimalUI(container, state, onChange) {
     presetGrid.appendChild(btn);
   }
   presetSection.appendChild(presetGrid);
+
+  // --- Section: Streaming (filled by avatar/live.js) ---
+  const streamingSection = addSection('Streaming');
 
   // --- Section 2: Coat Materials (Geometry & Clumping) ---
   const geoSection = addSection('Coat Materials');
@@ -1056,6 +1067,7 @@ export function createMinimalUI(container, state, onChange) {
   }
 
   return {
+    streamingSection,
     syncUI() {
       Object.keys(sliderRefs).forEach((k) => {
         sliderRefs[k].input.value = String(state[k]);

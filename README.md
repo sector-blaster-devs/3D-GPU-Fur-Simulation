@@ -10,20 +10,21 @@ Real-time fur in the browser (WebGL2, Three.js), a streaming avatar built on it,
 
 ## Streaming: detached preview + head and voice
 
-Bottom-left of the demo:
+In the **Streaming** section of the settings panel:
 
-- **Detach preview** opens a window with only Mochi-Puff. Click it to cycle the background: green, blue, magenta, **transparent** (for an OBS **Browser Source**: `https://fluff-avatar.pages.dev/output?bg=transparent`, no chroma key needed) and **blurred camera** (your own camera, blurred, behind Mochi; it stays on your device). It mirrors every setting from the demo's panel live: coat, colours, lighting and wind. In OBS, add a **Window Capture** of that window plus a **Chroma Key** filter. Your stream gets the creature without the settings UI.
-- **Head + voice**: Mochi-Puff follows your head (camera) and opens its mouth when you speak (microphone). A notice explains both before the browser asks.
+- **Detach preview** opens a window with only the creature. Click it to cycle the background: green, blue, magenta, **transparent** (for an OBS **Browser Source**: `https://fluff-avatar.pages.dev/output?bg=transparent`, no chroma key needed) and **blurred camera** (your own camera, blurred, behind it; it stays on your device). It mirrors the panel live: coat, colours, lighting and wind. In OBS, add a **Window Capture** of that window plus a **Chroma Key** filter. Your stream gets the creature without the settings UI.
+- **Head tracking**: the creature follows your head and blinks when you do (camera).
+- **Mouth follows**: **My jaw** (camera, the default), **My mic** (loudness of your microphone) or **Other people** (loudness of a shared tab or screen, for example a call, so the creature speaks when they do). Each explains itself before the browser asks.
 
 **Privacy:**
-- The camera and microphone are processed only on your device, in the browser tab. Head tracking is [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker); the microphone only measures loudness.
+- The camera, microphone and shared audio are processed only on your device, in the browser tab. Head tracking is [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker); audio is only measured for loudness.
 - Nothing is recorded, stored or uploaded.
 - Head angles, mouth openness and settings pass to the preview window through `BroadcastChannel` inside the same browser.
 - No server.
 
 ## Characters
 
-Mochi-Puff, Bun, Kitty and Cub: pick one bottom-left. They are sculpted in code in this repo (`src/characters.js`, `src/blobCreature.js`), so they are MIT with no third-party model licence. Each has a real mouth that opens through the fur, driven by your jaw and voice.
+The four quick presets in the panel are also the four characters: Sakura Mochi (Mochi-Puff), Golden Fluff (Kitty), Midnight Velvet (Cub) and Matcha Puff (Bun). They are sculpted in code in this repo (`src/characters.js`, `src/blobCreature.js`), so they are MIT with no third-party model licence. Each has a real mouth that opens through the fur, driven by your jaw and voice.
 
 ## Fur demo
 
